@@ -1,6 +1,8 @@
 // index.js
 // where your node app starts
 
+require("dotenv").config();
+
 // init project
 var express = require('express');
 var app = express();
@@ -25,8 +27,33 @@ app.get("/api/hello", function (req, res) {
 });
 
 
+app.get("/api/:date?", (req, res) => {
 
-// Listen on port set in environment variable or default to 3000
-var listener = app.listen(process.env.PORT || 3000, function () {
+  if (req.params.date === null || req.params.date === undefined || req.params.date.trim() === "") {
+    const datetime = new Date();
+    const unix = datetime.getTime();
+    const utc = datetime.toUTCString();
+    return res.json({ unix, utc });
+  }
+
+  let datetime;
+
+  if (/^\d{13}$/.test(req.params.date)) {
+    datetime = new Date(parseInt(req.params.date));
+  }
+  else {
+    datetime = new Date(req.params.date);
+    if (isNaN(datetime.getTime())) {
+      return res.status(400).json({ error: "Invalid Date" });
+    }
+  }
+
+  const unix = datetime.getTime();
+  const utc = datetime.toUTCString();
+
+  res.json({ unix, utc });
+});
+
+var listener = app.listen(process.env.PORT, function () {
   console.log('Your app is listening on port ' + listener.address().port);
 });
